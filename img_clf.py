@@ -5,11 +5,12 @@ import itertools
 import cv2
 import matplotlib
 
+from rappers import util
 
 matplotlib.use('agg')
 import matplotlib.pyplot as plt
 import numpy as np
-from keras.preprocessing.image import ImageDataGenerator, load_img, img_to_array
+from keras.preprocessing.image import load_img, img_to_array
 
 from my_inceptionv3 import MyInceptionV3
 from my_resnet50 import MyResNet50
@@ -37,7 +38,7 @@ def main(args):
         'vgg16': MyVgg16(img_width, img_height, args.num_classes, args.epochs, args.batch_size,
                          args.train_data_dir, args.val_data_dir),
         'vgg16_ft': MyVgg16FT(img_width, img_height, args.num_classes, args.epochs, args.batch_size,
-                         args.train_data_dir, args.val_data_dir),
+                              args.train_data_dir, args.val_data_dir),
         'resnet50': MyResNet50(img_width, img_height, args.num_classes, args.epochs, args.batch_size,
                                args.train_data_dir, args.val_data_dir),
         'resnet50_ft': MyResNet50FineTuned(img_width, img_height, args.num_classes, args.epochs, args.batch_size,
@@ -45,14 +46,8 @@ def main(args):
         'inceptionv3': MyInceptionV3(incv3_img_width, incv3_img_height, args.num_classes, args.epochs, args.batch_size,
                                      args.train_data_dir, args.val_data_dir)
     }[args.base_model]
-    if args.base_model == 'inceptionv3':
-        train_generator = get_generator(args.train_data_dir, incv3_img_width, incv3_img_height, args.batch_size)
-        val_generator = get_generator(args.val_data_dir, incv3_img_width, incv3_img_height, args.batch_size)
-    else:
-        train_generator = get_generator(args.train_data_dir, img_width, img_height, args.batch_size)
-        val_generator = get_generator(args.val_data_dir, img_width, img_height, args.batch_size)
 
-    train_network(my_network, train_generator, val_generator)
+    train_network(my_network)
     # make_prediction(args, my_network, 'ostr.png')
     # validate_accuracy(my_network)
     # compare_all_networks(args, train_generator, val_generator)
@@ -60,21 +55,21 @@ def main(args):
     # make_filter_vis(args, my_network)
 
 
-def train_network(network, train_generator, val_generator):
-    history = network.train(train_generator, val_generator)
+def train_network(network):
+    history = network.train()
     plot_history(history)
 
 
-def compare_all_networks(args, train_generator, val_generator):
+def compare_all_networks(args):
     my_vgg = MyVgg16(img_width, img_height, args.num_classes, args.epochs, args.batch_size,
                      args.train_data_dir, args.val_data_dir)
     my_resnet = MyResNet50(incv3_img_width, incv3_img_height, args.num_classes, args.epochs, args.batch_size,
                            args.train_data_dir, args.val_data_dir)
     my_inception = MyInceptionV3(img_width, img_height, args.num_classes, args.epochs, args.batch_size,
                                  args.train_data_dir, args.val_data_dir)
-    vgg_hist = my_vgg.train(train_generator, val_generator)
-    resnet_hist = my_resnet.train(train_generator, val_generator)
-    inception_hist = my_inception.train(train_generator, val_generator)
+    vgg_hist = my_vgg.train()
+    resnet_hist = my_resnet.train()
+    inception_hist = my_inception.train()
     compare_all_histories(vgg_hist, resnet_hist, inception_hist)
 
 
@@ -86,25 +81,12 @@ def load_image(image_path, width, height):
     return image
 
 
-def get_generator(directory, width, height, batch_size):
-    data_generator = ImageDataGenerator(rescale=1. / 255)
-    generator = data_generator.flow_from_directory(
-        directory,
-        target_size=(width, height),
-        batch_size=batch_size,
-        class_mode=None,
-        shuffle=False)
-    return generator
-
-
 def make_prediction(args, network, image_path):
     if args.base_model == 'inceptionv3':
         image = load_image(image_path, incv3_img_width, incv3_img_height)
-        class_dictionary = get_generator(args.train_data_dir, incv3_img_width, incv3_img_height,
-                                         args.batch_size).class_indices
     else:
         image = load_image(image_path, img_width, img_height)
-        class_dictionary = get_generator(args.train_data_dir, img_width, img_height, args.batch_size).class_indices
+    class_dictionary = util.get_class_dictionary(args.val_data_dir)
     predicted_class = network.make_prediction(image)
 
     in_id = predicted_class[0]
@@ -128,7 +110,7 @@ def plot_history(history):
     plt.title('model accuracy')
     plt.ylabel('accuracy')
     plt.xlabel('epoch')
-    plt.legend(['train', 'test'], loc='upper left')
+    plt.legend(['train', 'test'], loc='lower right')
 
     plt.subplot(212)
     plt.plot(history.history['loss'])
@@ -136,7 +118,7 @@ def plot_history(history):
     plt.title('model loss')
     plt.ylabel('loss')
     plt.xlabel('epoch')
-    plt.legend(['train', 'test'], loc='upper left')
+    plt.legend(['train', 'test'], loc='upper right')
     plt.show()
 
 
@@ -178,8 +160,8 @@ def compare_all_histories(vgg_hist, resnet_hist, inception_hist):
     plt.show()
 
 
-def plot_confusion_matrix(network, generator, normalize=False, title='Confusion matrix'):
-    conf_mat = network.get_confusion_matrix(generator)
+def plot_confusion_matrix(args, network, normalize=False, title='Confusion matrix'):
+    conf_mat = network.get_confusion_matrix(args.val_data_dir)
     if normalize:
         conf_mat = conf_mat.astype('float') / conf_mat.sum(axis=1)[:, np.newaxis]
         print("Normalized confusion matrix")
@@ -187,14 +169,16 @@ def plot_confusion_matrix(network, generator, normalize=False, title='Confusion 
         print('Confusion matrix, without normalization')
     print(conf_mat)
 
+    class_dictionary = util.get_class_dictionary(args.val_data_dir)
+
     np.set_printoptions(precision=2)
     plt.figure()
-    tick_marks = np.arange(len(generator.class_indices))
+    tick_marks = np.arange(len(class_dictionary))
     plt.title(title)
     plt.imshow(conf_mat, interpolation='none', cmap=plt.get_cmap('Blues'))
     plt.colorbar()
-    plt.xticks(tick_marks, generator.class_indices.keys(), rotation=20, fontsize=10)
-    plt.yticks(tick_marks, generator.class_indices.keys(), fontsize=10)
+    plt.xticks(tick_marks, class_dictionary.keys(), rotation=20, fontsize=10)
+    plt.yticks(tick_marks, class_dictionary.keys(), fontsize=10)
 
     fmt = '.2f' if normalize else 'd'
     thresh = conf_mat.max() / 2.
@@ -212,7 +196,7 @@ def plot_confusion_matrix(network, generator, normalize=False, title='Confusion 
 
 def make_filter_vis(args, network):
     if args.base_model == 'vgg16':
-        network.visualize_filters(img_width, img_height)
+        network.visualize_filters()
 
 
 def parse_arguments():

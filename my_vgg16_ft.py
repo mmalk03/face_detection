@@ -1,13 +1,7 @@
-from pathlib import Path
-
-import numpy as np
-import pickle
 from keras import applications
 from keras.layers import Dropout, Flatten, Dense
 from keras.models import Sequential
 from keras.optimizers import SGD
-from keras.preprocessing.image import ImageDataGenerator
-from keras.utils import plot_model
 from keras.utils.np_utils import to_categorical
 from sklearn.metrics import confusion_matrix
 
@@ -40,16 +34,73 @@ class MyVgg16FT:
         self.train_data_dir = train_data_dir
         self.validation_data_dir = validation_data_dir
 
-    def train(self, train_generator, val_generator):
-        # self.save_bottleneck_features(train_generator, val_generator)
-        # self.train_top_model(train_generator, val_generator)
+    def train(self):
+        # self.save_bottleneck_features()
+        # self.train_top_model()
+        return self.fine_tune()
 
-        train_gen = util.get_normal_generator(
+    def save_bottleneck_features(self):
+        train_generator = util.get_generator(
             self.train_data_dir,
             self.img_width,
             self.img_height,
             self.batch_size)
-        val_gen = util.get_normal_generator(
+        val_generator = util.get_generator(
+            self.validation_data_dir,
+            self.img_width,
+            self.img_height,
+            self.batch_size)
+
+        model = self.get_base_model()
+        util.save_model_plot(self.vgg16_ft_model_plot_path, model)
+
+        train_bottleneck_features = model.predict_generator(
+            train_generator, len(train_generator.filenames) // self.batch_size)
+        util.save_bottleneck_features(self.train_bottleneck_features_path, train_bottleneck_features)
+
+        val_bottleneck_features = model.predict_generator(
+            val_generator, len(val_generator.filenames) // self.batch_size)
+        util.save_bottleneck_features(self.val_bottleneck_features_path, val_bottleneck_features)
+
+    def train_top_model(self):
+        train_generator = util.get_generator(
+            self.train_data_dir,
+            self.img_width,
+            self.img_height,
+            self.batch_size)
+        val_generator = util.get_generator(
+            self.validation_data_dir,
+            self.img_width,
+            self.img_height,
+            self.batch_size)
+
+        train_data = util.load_bottleneck_features(self.train_bottleneck_features_path)
+        val_data = util.load_bottleneck_features(self.val_bottleneck_features_path)
+
+        train_labels = train_generator.classes
+        train_labels = to_categorical(train_labels, num_classes=self.num_classes)
+        val_labels = val_generator.classes
+        val_labels = to_categorical(val_labels, num_classes=self.num_classes)
+
+        model = self.get_top_model(train_data.shape[1:])
+        model.compile(optimizer='rmsprop', loss='categorical_crossentropy', metrics=['accuracy'])
+        util.save_model_plot(self.top_model_plot_path, model)
+
+        history = model.fit(train_data, train_labels,
+                            epochs=self.epochs,
+                            batch_size=self.batch_size,
+                            validation_data=(val_data, val_labels))
+        model.save_weights(self.top_model_weights_path)
+        util.eval_model_loss_acc(model, val_data, val_labels, self.batch_size)
+        return history
+
+    def fine_tune(self):
+        train_generator = util.get_categorical_generator(
+            self.train_data_dir,
+            self.img_width,
+            self.img_height,
+            self.batch_size)
+        val_generator = util.get_categorical_generator(
             self.validation_data_dir,
             self.img_width,
             self.img_height,
@@ -65,6 +116,7 @@ class MyVgg16FT:
                 layer.trainable = True
             else:
                 layer.trainable = False
+
         top_model = self.get_top_model(base_model.output_shape[1:])
         top_model.load_weights(self.top_model_weights_path)
         top_model.trainable = False
@@ -72,121 +124,48 @@ class MyVgg16FT:
         model = Sequential()
         model.add(base_model)
         model.add(top_model)
-
         model.compile(optimizer=SGD(lr=1e-4, momentum=0.9), loss='categorical_crossentropy', metrics=['accuracy'])
-        model.summary()
-        history = model.fit_generator(train_gen,
+        util.save_model_plot(self.vgg16_ft_model_plot_path, model)
+
+        # TODO: extract 6400 and 1600 from generator
+
+        history = model.fit_generator(train_generator,
                                       verbose=1,
-                                      steps_per_epoch=6400 / 16,
-                                      epochs=10,
-                                      validation_data=val_gen,
-                                      validation_steps=1600 / 16)
+                                      steps_per_epoch=6400 / self.batch_size,
+                                      epochs=self.epochs,
+                                      validation_data=val_generator,
+                                      validation_steps=1600 / self.batch_size)
         model.save_weights(self.model_weights_path)
-        self.save_history(history)
-
+        util.save_history(self.history_path, history)
         return history
-
-    def train_old(self, train_generator, val_generator):
-        # self.save_bottleneck_features(train_generator, val_generator)
-        # self.train_top_model(train_generator, val_generator)
-
-        train_datagen = ImageDataGenerator(rescale=1. / 255)
-        test_datagen = ImageDataGenerator(rescale=1. / 255)
-        train_gen = train_datagen.flow_from_directory(
-            'data/train',
-            target_size=(224, 224),
-            batch_size=16,
-            class_mode='categorical')
-        val_gen = test_datagen.flow_from_directory(
-            'data/validation',
-            target_size=(224, 224),
-            batch_size=16,
-            class_mode='categorical')
-
-        base_model = self.get_base_model()
-        base_model.trainable = True
-        set_trainable = False
-        for layer in base_model.layers:
-            if layer.name == 'block5_conv1':
-                set_trainable = True
-            if set_trainable:
-                layer.trainable = True
-            else:
-                layer.trainable = False
-        top_model = self.get_top_model(base_model.output_shape[1:])
-        top_model.load_weights(self.top_model_weights_path)
-        top_model.trainable = False
-
-        model = Sequential()
-        model.add(base_model)
-        model.add(top_model)
-
-        model.compile(optimizer=SGD(lr=1e-4, momentum=0.9), loss='categorical_crossentropy', metrics=['accuracy'])
-        model.summary()
-        history = model.fit_generator(train_gen,
-                                      verbose=1,
-                                      steps_per_epoch=6400 / 16,
-                                      epochs=10,
-                                      validation_data=val_gen,
-                                      validation_steps=1600 / 16)
-        model.save_weights(self.model_weights_path)
-        self.save_history(history)
-
-        return history
-
-    def save_history(self, history):
-        with open(self.history_path, 'wb') as file_pi:
-            pickle.dump(history.history, file_pi)
 
     def make_prediction(self, image):
         base_model = self.get_base_model()
-        bottleneck_prediction = base_model.predict(image)
-        top_model = self.get_top_model(bottleneck_prediction.shape[1:])
-        self.load_top_model_weights(top_model)
-        return top_model.predict_classes(bottleneck_prediction)
+        top_model = self.get_top_model(base_model.output_shape[1:])
+        model = Sequential()
+        model.add(base_model)
+        model.add(top_model)
+        util.load_model_weights(self.model_weights_path, model)
+        # TODO: verify predict classes
+        return model.predict_classes(image)
 
-    def get_confusion_matrix(self, val_generator):
-        validation_data = self.load_val_bottleneck_features()
-        train_labels = val_generator.classes
-        top_model = self.get_top_model(validation_data.shape[1:])
-        self.load_top_model_weights(top_model)
-        predicted_labels = top_model.predict_classes(validation_data)
+    def get_confusion_matrix(self, directory):
+        base_model = self.get_base_model()
+        top_model = self.get_top_model(base_model.output_shape[1:])
+        model = Sequential()
+        model.add(base_model)
+        model.add(top_model)
+        util.load_model_weights(self.model_weights_path, model)
+
+        generator = util.get_generator(
+            directory,
+            self.img_width,
+            self.img_height,
+            self.batch_size)
+        train_labels = generator.classes
+        # TODO: verify predict classes
+        predicted_labels = top_model.predict_classes(generator)
         return confusion_matrix(train_labels, predicted_labels)
-
-    def save_bottleneck_features(self, train_generator, val_generator):
-        model = self.get_base_model()
-        self.plot_base_model(model)
-
-        train_bottleneck_features = model.predict_generator(
-            train_generator, len(train_generator.filenames) // self.batch_size)
-        self.save_train_bottleneck_features(train_bottleneck_features)
-
-        val_bottleneck_features = model.predict_generator(
-            val_generator, len(val_generator.filenames) // self.batch_size)
-        self.save_val_bottleneck_features(val_bottleneck_features)
-
-    def train_top_model(self, train_generator, val_generator):
-        train_data = self.load_train_bottleneck_features()
-        validation_data = self.load_val_bottleneck_features()
-
-        train_labels = train_generator.classes
-        train_labels = to_categorical(train_labels, num_classes=self.num_classes)
-        validation_labels = val_generator.classes
-        validation_labels = to_categorical(validation_labels, num_classes=self.num_classes)
-
-        model = self.get_top_model(train_data.shape[1:])
-        model.compile(optimizer='rmsprop', loss='categorical_crossentropy', metrics=['accuracy'])
-        self.plot_top_model(model)
-
-        # early_stopping = EarlyStopping(monitor='val_loss', patience=2)
-        # callbacks=[early_stopping]
-        history = model.fit(train_data, train_labels,
-                            epochs=self.epochs,
-                            batch_size=self.batch_size,
-                            validation_data=(validation_data, validation_labels))
-        model.save_weights(self.top_model_weights_path)
-        self.eval_model_loss_acc(model, validation_data, validation_labels)
-        return history
 
     def get_top_model(self, input_shape):
         model = Sequential()
@@ -196,40 +175,6 @@ class MyVgg16FT:
         model.add(Dense(self.num_classes, activation='softmax'))
         return model
 
-    def load_top_model_weights(self, model):
-        my_file = Path(self.top_model_weights_path)
-        if my_file.is_file():
-            model.load_weights(self.top_model_weights_path)
-
     def get_base_model(self):
-        model = applications.VGG16(include_top=False, weights='imagenet',
-                                   input_shape=(self.img_width, self.img_height, 3))
-        return model
-
-    def save_val_bottleneck_features(self, val_bottleneck_features):
-        np.save(open(self.val_bottleneck_features_path, 'wb'), val_bottleneck_features)
-
-    def save_train_bottleneck_features(self, bottleneck_features_train):
-        np.save(open(self.train_bottleneck_features_path, 'wb'), bottleneck_features_train)
-
-    def load_val_bottleneck_features(self):
-        validation_data = np.load(open(self.val_bottleneck_features_path, 'rb'))
-        return validation_data
-
-    def load_train_bottleneck_features(self):
-        train_data = np.load(open(self.train_bottleneck_features_path, 'rb'))
-        return train_data
-
-    def plot_base_model(self, model):
-        print(model.summary())
-        plot_model(model, to_file=self.vgg16_ft_model_plot_path, show_shapes=True, show_layer_names=True)
-
-    def plot_top_model(self, model):
-        print(model.summary())
-        plot_model(model, to_file=self.top_model_plot_path, show_shapes=True, show_layer_names=True)
-
-    def eval_model_loss_acc(self, model, validation_data, validation_labels):
-        (eval_loss, eval_accuracy) = model.evaluate(
-            validation_data, validation_labels, batch_size=self.batch_size, verbose=1)
-        print("[INFO] Accuracy: {:.2f}%".format(eval_accuracy * 100))
-        print("[INFO] Loss: {}".format(eval_loss))
+        return applications.VGG16(include_top=False, weights='imagenet',
+                                  input_shape=(self.img_width, self.img_height, 3))
