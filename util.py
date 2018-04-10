@@ -5,6 +5,7 @@ import numpy as np
 import scipy
 from keras import backend as K
 from keras.preprocessing.image import ImageDataGenerator
+from keras.preprocessing.image import load_img, img_to_array
 from keras.utils import plot_model
 
 
@@ -60,6 +61,21 @@ def load_model_weights(path, model):
 def save_history(path, history):
     with open(path, 'wb') as file_pi:
         pickle.dump(history.history, file_pi)
+
+
+def load_history(path):
+    filename = open(path, "rb")
+    history = pickle.load(filename)
+    filename.close()
+    return history
+
+
+def load_image(image_path, width, height):
+    image = load_img(image_path, target_size=(width, height))
+    image = img_to_array(image)
+    image = image / 255
+    image = np.expand_dims(image, axis=0)
+    return image
 
 
 def vis_filter(save_dir, img_width, img_height, model, layer_name, filter_index):
