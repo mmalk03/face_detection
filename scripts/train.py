@@ -3,15 +3,12 @@ import argparse
 
 import matplotlib
 
+from rappers.scripts import util
+
 matplotlib.use('agg')
 
-from my_inceptionv3 import MyInceptionV3
-from my_resnet50 import MyResNet50
-from my_vgg16 import MyVgg16
-from my_vgg16_ft import MyVgg16FT
-
 defaults = {
-    'base_model': 'vgg16',
+    'base_model': 'vgg16_ft',
     'num_classes': 4,
     'epochs': 30,
     'batch_size': 16,
@@ -21,12 +18,7 @@ defaults = {
 
 
 def main(args):
-    my_network = {
-        'vgg16': MyVgg16(),
-        'vgg16_ft': MyVgg16FT(),
-        'resnet50': MyResNet50(),
-        'inceptionv3': MyInceptionV3()
-    }[args.base_model]
+    my_network = util.get_network(args.base_model)
     my_network.train(args.train_data_dir, args.val_data_dir, args.epochs, args.batch_size)
 
 

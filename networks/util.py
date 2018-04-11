@@ -28,10 +28,6 @@ def get_categorical_generator(directory, img_width, img_height, batch_size):
         class_mode='categorical')
 
 
-def get_class_dictionary(directory):
-    return ImageDataGenerator().flow_from_directory(directory).class_indices
-
-
 def save_bottleneck_features(path, bottleneck_features):
     np.save(open(path, 'wb'), bottleneck_features)
 

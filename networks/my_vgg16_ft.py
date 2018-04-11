@@ -1,20 +1,24 @@
 import numpy as np
-from keras import applications
+from keras.applications import VGG16
 from keras.layers import Dropout, Flatten, Dense
 from keras.models import Sequential
 from keras.optimizers import SGD
 from keras.utils.np_utils import to_categorical
 from sklearn.metrics import confusion_matrix
 
-from rappers import util
+from rappers.networks import util
 
 
 class MyVgg16FT:
-    vgg16_ft_model_plot_path = 'plots/vgg16_ft_model_plot.png'
+    base_model_plot_path = 'plots/vgg16_ft_model_plot.png'
     top_model_plot_path = 'plots/vgg16_ft_top_model_plot.png'
-    train_bottleneck_features_path = 'weights/vgg16_ft_bottleneck_features_train.npy'
-    val_bottleneck_features_path = 'weights/vgg16_ft_bottleneck_features_validation.npy'
-    top_model_weights_path = 'weights/vgg16_ft_bottleneck_fc_model.h5'
+    model_plot_path = 'plots/vgg16_ft_model_plot.png'
+    train_bottleneck_features_path = 'weights/vgg16_bottleneck_features_train.npy'
+    val_bottleneck_features_path = 'weights/vgg16_bottleneck_features_validation.npy'
+    top_model_weights_path = 'weights/vgg16_bottleneck_fc_model.h5'
+    # train_bottleneck_features_path = 'weights/vgg16_ft_bottleneck_features_train.npy'
+    # val_bottleneck_features_path = 'weights/vgg16_ft_bottleneck_features_validation.npy'
+    # top_model_weights_path = 'weights/vgg16_ft_bottleneck_fc_model.h5'
     model_weights_path = 'weights/vgg16_ft_weights.h5'
     history_path = 'histories/vgg16_ft_history'
 
@@ -42,7 +46,7 @@ class MyVgg16FT:
         val_generator = util.get_generator(val_data_dir, self.img_width, self.img_height, batch_size)
 
         model = self.get_base_model()
-        util.save_model_plot(self.vgg16_ft_model_plot_path, model)
+        util.save_model_plot(self.base_model_plot_path, model)
 
         train_bottleneck_features = model.predict_generator(
             train_generator, len(train_generator.filenames) // batch_size)
@@ -70,13 +74,12 @@ class MyVgg16FT:
         model.compile(optimizer='rmsprop', loss='categorical_crossentropy', metrics=['accuracy'])
         util.save_model_plot(self.top_model_plot_path, model)
 
-        history = model.fit(train_data, train_labels,
+        model.fit(train_data, train_labels,
                             epochs=epochs,
                             batch_size=batch_size,
                             validation_data=(val_data, val_labels))
         model.save_weights(self.top_model_weights_path)
         util.eval_model_loss_acc(model, val_data, val_labels, batch_size)
-        return history
 
     def fine_tune(self, train_data_dir, val_data_dir, epochs, batch_size):
         train_generator = util.get_categorical_generator(train_data_dir, self.img_width, self.img_height, batch_size)
@@ -101,7 +104,7 @@ class MyVgg16FT:
         model.add(base_model)
         model.add(top_model)
         model.compile(optimizer=SGD(lr=1e-4, momentum=0.9), loss='categorical_crossentropy', metrics=['accuracy'])
-        util.save_model_plot(self.vgg16_ft_model_plot_path, model)
+        util.save_model_plot(self.model_plot_path, model)
 
         history = model.fit_generator(train_generator,
                                       verbose=1,
@@ -111,7 +114,15 @@ class MyVgg16FT:
                                       validation_steps=val_generator.samples / batch_size)
         model.save_weights(self.model_weights_path)
         util.save_history(self.history_path, history)
-        return history
+
+    def evaluate(self, data_dir, batch_size=defaults['batch_size']):
+        test_generator = util.get_generator(data_dir, self.img_width, self.img_height, batch_size)
+
+        model = self.get_trained_model(test_generator.num_classes)
+        test_loss, test_acc = model.evaluate_generator(test_generator)
+
+        print('Test accuracy: ', test_acc)
+        print('Test loss: ', test_loss)
 
     def make_prediction(self, path, num_classes):
         image = util.load_image(path, self.img_width, self.img_height)
@@ -139,8 +150,7 @@ class MyVgg16FT:
         return model
 
     def get_base_model(self):
-        return applications.VGG16(include_top=False, weights='imagenet',
-                                  input_shape=(self.img_width, self.img_height, 3))
+        return VGG16(include_top=False, weights='imagenet', input_shape=(self.img_width, self.img_height, 3))
 
     def get_trained_model(self, num_classes):
         base_model = self.get_base_model()

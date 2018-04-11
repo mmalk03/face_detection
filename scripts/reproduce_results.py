@@ -3,18 +3,17 @@ import argparse
 import itertools
 
 import matplotlib
-
-from rappers import util
-
-matplotlib.use('agg')
 import matplotlib.pyplot as plt
 import numpy as np
 from keras.preprocessing.image import load_img, img_to_array
 
-from my_inceptionv3 import MyInceptionV3
-from my_resnet50 import MyResNet50
-from my_vgg16 import MyVgg16
-from my_vgg16_ft import MyVgg16FT
+from rappers.networks.my_inceptionv3 import MyInceptionV3
+from rappers.networks.my_resnet50 import MyResNet50
+from rappers.networks.my_vgg16 import MyVgg16
+from rappers.networks.my_vgg16_ft import MyVgg16FT
+from rappers.scripts import util
+
+matplotlib.use('agg')
 
 defaults = {
     'dir': 'data/validation'
@@ -30,7 +29,7 @@ def main(args):
     vgg16_hist = my_vgg16.get_history()
     resnet50_hist = my_resnet50.get_history()
     inceptionv3_hist = my_inceptionv3.get_history()
-    compare_all_histories(vgg16_hist, resnet50_hist, inceptionv3_hist)
+    compare_base_model_histories(vgg16_hist, resnet50_hist, inceptionv3_hist)
 
     vgg16_ft_hist = my_vgg16_ft.get_history()
     plot_history(vgg16_ft_hist)
@@ -70,7 +69,7 @@ def plot_history(history):
     plt.show()
 
 
-def compare_all_histories(vgg_hist, resnet_hist, inception_hist):
+def compare_base_model_histories(vgg_hist, resnet_hist, inception_hist):
     plt.figure(1)
 
     plt.subplot(221)
@@ -108,8 +107,8 @@ def compare_all_histories(vgg_hist, resnet_hist, inception_hist):
     plt.show()
 
 
-def plot_confusion_matrix(network, dir, normalize=False, title='Confusion matrix'):
-    conf_mat = network.get_confusion_matrix(dir)
+def plot_confusion_matrix(network, data_dir, normalize=False, title='Confusion matrix'):
+    conf_mat = network.get_confusion_matrix(data_dir)
     if normalize:
         conf_mat = conf_mat.astype('float') / conf_mat.sum(axis=1)[:, np.newaxis]
         print("Normalized confusion matrix")
@@ -117,7 +116,7 @@ def plot_confusion_matrix(network, dir, normalize=False, title='Confusion matrix
         print('Confusion matrix, without normalization')
     print(conf_mat)
 
-    class_dictionary = util.get_class_dictionary(dir)
+    class_dictionary = util.get_class_dictionary(data_dir)
 
     np.set_printoptions(precision=2)
     plt.figure()
@@ -138,7 +137,7 @@ def plot_confusion_matrix(network, dir, normalize=False, title='Confusion matrix
     plt.ylabel('True label')
     plt.xlabel('Predicted label')
     plt.tight_layout()
-    plt.savefig('plots.confusion_matrix.png')
+    plt.savefig('plots/confusion_matrix.png')
     plt.show()
 
 

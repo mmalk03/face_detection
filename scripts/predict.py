@@ -4,14 +4,9 @@ import argparse
 import cv2
 import matplotlib
 
-from rappers import util
+from rappers.scripts import util
 
 matplotlib.use('agg')
-
-from my_inceptionv3 import MyInceptionV3
-from my_resnet50 import MyResNet50
-from my_vgg16 import MyVgg16
-from my_vgg16_ft import MyVgg16FT
 
 defaults = {
     'base_model': 'vgg16_ft',
@@ -21,12 +16,7 @@ defaults = {
 
 
 def main(args):
-    my_network = {
-        'vgg16': MyVgg16(),
-        'vgg16_ft': MyVgg16FT(),
-        'resnet50': MyResNet50(),
-        'inceptionv3': MyInceptionV3()
-    }[args.base_model]
+    my_network = util.get_network(args.base_model)
     class_dictionary = util.get_class_dictionary(args.dir)
     predicted_class = my_network.make_prediction(args.path, class_dictionary.__len__())
 
