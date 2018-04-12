@@ -30,7 +30,7 @@
   \bigskip
 }
 \author{Mikołaj Małkiński}
-\date{10 April 2018}
+\date{12 April 2018}
 
 \begin{document}
 
@@ -228,7 +228,26 @@ In the figure \ref{fig:conv_filters}, first 6 filters from first convolutional b
 \end{figure}
 
 \newpage
-\section{Examples of good/bad predictions}
-
+\section{Analysis of predictions}
+In the Figure \ref{fig:wrong_predictions} some of wrong predictions of fine-tuned version of VGG16 are shown. Finally, Figure \ref{fig:confusion_matrix} presents the confusion matrix of mentioned network.
+\begin{figure}[!h]
+\centering
+\begin{tabular}{cc}
+	\subfloat[Predicted: ostr, true: kękę]{\includegraphics[width = 0.4\textwidth]{wrong_pred/pr_ostr_tr_keke.png}} &
+	\subfloat[Predicted: ostr, true: taco]{\includegraphics[width = 0.4\textwidth]{wrong_pred/pr_ostr_tr_taco.png}} \\
+	\subfloat[Predicted: otso, true: ostr]{\includegraphics[width = 0.4\textwidth]{wrong_pred/pr_ostr_tr_otso.png}} &
+	\subfloat[Predicted: otso, true: taco]{\includegraphics[width = 0.4\textwidth]{wrong_pred/pr_otso_tr_taco.png}} \\
+\end{tabular}
+\caption{Examples of bad predictions of fine-tuned VGG16}
+\label{fig:wrong_predictions}
+\end{figure}
+\begin{figure}[!h]
+\centering
+\begin{tabular}{c}
+	\subfloat{\includegraphics[width = 0.9\textwidth]{plots/confusion_matrix.png}}
+\end{tabular}
+\caption{Confusion matrix of fine-tuned VGG16}
+\label{fig:confusion_matrix}
+\end{figure}
 
 \end{document}
