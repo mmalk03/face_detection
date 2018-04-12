@@ -10,16 +10,16 @@ matplotlib.use('agg')
 
 defaults = {
     'base_model': 'vgg16_ft',
-    'path': 'ostr.png',
-    'dir': 'data/validation'
+    'path': '../ostr.png',
+    'dir': '../data/validation'
 }
 
 
 def main(args):
     my_network = util.get_network(args.base_model)
-    class_dictionary = util.get_class_dictionary(args.dir)
-    predicted_class = my_network.make_prediction(args.path, class_dictionary.__len__())
+    predicted_class = my_network.make_prediction(args.path)
 
+    class_dictionary = util.get_class_dictionary(args.dir)
     in_id = predicted_class[0]
     inv_map = {v: k for k, v in class_dictionary.items()}
 

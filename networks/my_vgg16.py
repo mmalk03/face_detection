@@ -1,6 +1,7 @@
+import numpy as np
 from keras.applications import VGG16
 from keras.layers import Dropout, Flatten, Dense
-from keras.models import Sequential
+from keras.models import Sequential, load_model
 from keras.utils.np_utils import to_categorical
 from sklearn.metrics import confusion_matrix
 
@@ -12,7 +13,7 @@ class MyVgg16:
     top_model_plot_path = 'plots/vgg16_top_model_plot.png'
     train_bottleneck_features_path = 'weights/vgg16_bottleneck_features_train.npy'
     val_bottleneck_features_path = 'weights/vgg16_bottleneck_features_validation.npy'
-    top_model_weights_path = 'weights/vgg16_bottleneck_fc_model.h5'
+    model_path = 'weights/vgg16_model.h5'
     filter_dir = 'plots/filters/vgg16'
     history_path = 'histories/vgg16_history'
 
@@ -72,7 +73,7 @@ class MyVgg16:
                             epochs=epochs,
                             batch_size=batch_size,
                             validation_data=(val_data, val_labels))
-        model.save_weights(self.top_model_weights_path)
+        model.save(self.model_path)
         util.save_history(self.history_path, history)
         util.eval_model_loss_acc(model, val_data, val_labels, batch_size)
 
@@ -83,20 +84,23 @@ class MyVgg16:
         test_bottleneck_features = base_model.predict_generator(
             test_generator, len(test_generator.filenames) // batch_size)
 
-        top_model = self.get_top_model(test_bottleneck_features.shape[1:], test_generator.num_classes)
-        util.load_model_weights(self.top_model_weights_path, top_model)
-        test_loss, test_acc = top_model.evaluate_generator(test_generator)
+        num_classes = test_generator.num_classes
+
+        test_labels = test_generator.classes
+        test_labels = to_categorical(test_labels, num_classes=num_classes)
+
+        top_model = load_model('../' + self.model_path)
+        test_loss, test_acc = top_model.evaluate(test_bottleneck_features, test_labels, batch_size=batch_size)
 
         print('Test accuracy: ', test_acc)
         print('Test loss: ', test_loss)
 
-    def make_prediction(self, path, num_classes):
+    def make_prediction(self, path):
         image = util.load_image(path, self.img_width, self.img_height)
 
         base_model = self.get_base_model()
         bottleneck_prediction = base_model.predict(image)
-        top_model = self.get_top_model(bottleneck_prediction.shape[1:], num_classes)
-        util.load_model_weights(self.top_model_weights_path, top_model)
+        top_model = load_model('../' + self.model_path)
         return top_model.predict_classes(bottleneck_prediction)
 
     def get_history(self):
@@ -106,10 +110,16 @@ class MyVgg16:
         validation_data = util.load_bottleneck_features(self.val_bottleneck_features_path)
         val_generator = util.get_generator(directory, self.img_width, self.img_height, batch_size)
         train_labels = val_generator.classes
-        top_model = self.get_top_model(validation_data.shape[1:], val_generator.num_classes)
-        util.load_model_weights(self.top_model_weights_path, top_model)
+        top_model = load_model('../' + self.model_path)
         predicted_labels = top_model.predict_classes(validation_data)
         return confusion_matrix(train_labels, predicted_labels)
+
+    def get_wrong_predictions(self, directory, batch_size=defaults['batch_size']):
+        validation_data = util.load_bottleneck_features(self.val_bottleneck_features_path)
+        val_generator = util.get_generator(directory, self.img_width, self.img_height, batch_size)
+        train_labels = val_generator.classes
+        top_model = load_model('../' + self.model_path)
+        return np.nonzero(top_model.predict_classes(validation_data).reshape((-1,)) != train_labels)
 
     @staticmethod
     def get_top_model(input_shape, num_classes):

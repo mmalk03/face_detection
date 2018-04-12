@@ -1,9 +1,15 @@
 /data
 /histories
+/networks/my_resnet50_ft.py
+/networks/my_vgg16_2.py
+/networks/my_vgg16_data_aug.py
 /plots
+/report/histories
+/report/report.aux
+/report/report.log
+/report/report.out
+/report/report.synctex.gz
 /weights
-/banana.jpg
-/my_resnet50_finetuned.py
 old_filter_vis.py
 ostr.png
 rap_train.zip

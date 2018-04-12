@@ -1,7 +1,7 @@
 import numpy as np
 from keras.applications import ResNet50
 from keras.layers import Flatten, Dense
-from keras.models import Sequential
+from keras.models import Sequential, load_model
 from keras.optimizers import SGD
 from keras.utils.np_utils import to_categorical
 from sklearn.metrics import confusion_matrix
@@ -13,13 +13,10 @@ class MyResNet50FT:
     base_model_plot_path = 'plots/resnet50_ft_model_plot.png'
     top_model_plot_path = 'plots/resnet50_ft_top_model_plot.png'
     model_plot_path = 'plots/resnet50_ft_model_plot.png'
-    # train_bottleneck_features_path = 'weights/resnet50_ft_bottleneck_features_train.npy'
-    # val_bottleneck_features_path = 'weights/resnet50_ft_bottleneck_features_validation.npy'
-    # top_model_weights_path = 'weights/resnet50_ft_bottleneck_fc_model.h5'
-    train_bottleneck_features_path = 'weights/resnet50_bottleneck_features_train.npy'
-    val_bottleneck_features_path = 'weights/resnet50_bottleneck_features_validation.npy'
-    top_model_weights_path = 'weights/resnet50_bottleneck_fc_model.h5'
-    model_weights_path = 'weights/resnet50_ft_weights.h5'
+    train_bottleneck_features_path = 'weights/resnet50_ft_bottleneck_features_train.npy'
+    val_bottleneck_features_path = 'weights/resnet50_ft_bottleneck_features_validation.npy'
+    top_model_weights_path = 'weights/resnet50_ft_bottleneck_fc_model.h5'
+    model_path = 'weights/resnet50_ft_model.h5'
     history_path = 'histories/resnet50_ft_history'
 
     defaults = {
@@ -75,9 +72,9 @@ class MyResNet50FT:
         util.save_model_plot(self.top_model_plot_path, model)
 
         model.fit(train_data, train_labels,
-                            epochs=epochs,
-                            batch_size=batch_size,
-                            validation_data=(val_data, val_labels))
+                  epochs=epochs,
+                  batch_size=batch_size,
+                  validation_data=(val_data, val_labels))
         model.save_weights(self.top_model_weights_path)
         util.eval_model_loss_acc(model, val_data, val_labels, batch_size)
 
@@ -108,22 +105,22 @@ class MyResNet50FT:
                                       epochs=epochs,
                                       validation_data=val_generator,
                                       validation_steps=val_generator.samples / batch_size)
-        model.save_weights(self.model_weights_path)
+        model.save(self.model_path)
         util.save_history(self.history_path, history)
         return history
 
     def evaluate(self, data_dir, batch_size=defaults['batch_size']):
         test_generator = util.get_generator(data_dir, self.img_width, self.img_height, batch_size)
 
-        model = self.get_trained_model(test_generator.num_classes)
+        model = self.get_trained_model()
         test_loss, test_acc = model.evaluate_generator(test_generator)
 
         print('Test accuracy: ', test_acc)
         print('Test loss: ', test_loss)
 
-    def make_prediction(self, path, num_classes):
+    def make_prediction(self, path):
         image = util.load_image(path, self.img_width, self.img_height)
-        model = self.get_trained_model(num_classes)
+        model = self.get_trained_model()
         return model.predict_classes(image)
 
     def get_history(self):
@@ -131,7 +128,7 @@ class MyResNet50FT:
 
     def get_confusion_matrix(self, directory, batch_size=defaults['batch_size']):
         generator = util.get_generator(directory, self.img_width, self.img_height, batch_size)
-        model = self.get_trained_model(generator.num_classes)
+        model = self.get_trained_model()
         true_labels = generator.classes
         predictions = model.predict_generator(generator)
         pred_labels = np.argmax(predictions, axis=-1)
@@ -149,22 +146,5 @@ class MyResNet50FT:
     def get_base_model(self):
         return ResNet50(include_top=False, weights='imagenet', input_shape=(self.img_width, self.img_height, 3))
 
-    def get_trained_model(self, num_classes):
-        base_model = self.get_base_model()
-        base_model.trainable = True
-        set_trainable = False
-        for layer in base_model.layers:
-            if layer.name == 'block5_conv1':
-                set_trainable = True
-            if set_trainable:
-                layer.trainable = True
-            else:
-                layer.trainable = False
-        top_model = self.get_top_model(base_model.output_shape[1:], num_classes)
-        model = Sequential()
-        model.add(base_model)
-        model.add(top_model)
-        model.compile(optimizer=SGD(lr=1e-4, momentum=0.9), loss='categorical_crossentropy', metrics=['accuracy'])
-        model.summary()
-        util.load_model_weights(self.model_weights_path, model)
-        return model
+    def get_trained_model(self):
+        return load_model('../' + self.model_path)

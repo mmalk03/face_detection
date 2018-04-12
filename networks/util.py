@@ -19,6 +19,24 @@ def get_generator(directory, img_width, img_height, batch_size):
         shuffle=False)
 
 
+def get_augmented_generator(directory, img_width, img_height, batch_size):
+    data_generator = ImageDataGenerator(
+        rescale=1. / 255,
+        rotation_range=40,
+        width_shift_range=0.2,
+        height_shift_range=0.2,
+        shear_range=0.2,
+        zoom_range=0.2,
+        horizontal_flip=True,
+        fill_mode='nearest')
+    return data_generator.flow_from_directory(
+        directory,
+        target_size=(img_width, img_height),
+        batch_size=batch_size,
+        class_mode=None,
+        shuffle=False)
+
+
 def get_categorical_generator(directory, img_width, img_height, batch_size):
     data_generator = ImageDataGenerator(rescale=1. / 255)
     return data_generator.flow_from_directory(

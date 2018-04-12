@@ -8,7 +8,7 @@ from rappers.scripts import util
 matplotlib.use('agg')
 
 defaults = {
-    'base_model': 'vgg16_ft',
+    'base_model': 'vgg16_2',
     'num_classes': 4,
     'epochs': 30,
     'batch_size': 16,

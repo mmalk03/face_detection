@@ -8,8 +8,8 @@ from rappers.scripts import util
 matplotlib.use('agg')
 
 defaults = {
-    'base_model': 'vgg16',
-    'data_dir': 'data/validation'
+    'base_model': 'inceptionv3',
+    'data_dir': '../data/validation'
 }
 
 
@@ -20,7 +20,7 @@ def main(args):
 
 def parse_arguments():
     parser = argparse.ArgumentParser(
-        description='Trains CNN model using fine-tuned VGG16 architecture with weights from imagenet')
+        description='Evaluates given model')
     parser.add_argument(
         '--base-model',
         help='Base model architecture',
@@ -29,7 +29,7 @@ def parse_arguments():
     parser.add_argument(
         '--dir',
         help='Directory with images used for evaluation.',
-        type=int,
+        type=str,
         default=defaults['data_dir'])
 
     return parser.parse_args()

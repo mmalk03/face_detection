@@ -1,7 +1,7 @@
 import numpy as np
 from keras.applications import VGG16
 from keras.layers import Dropout, Flatten, Dense
-from keras.models import Sequential
+from keras.models import Sequential, load_model
 from keras.optimizers import SGD
 from keras.utils.np_utils import to_categorical
 from sklearn.metrics import confusion_matrix
@@ -13,13 +13,11 @@ class MyVgg16FT:
     base_model_plot_path = 'plots/vgg16_ft_model_plot.png'
     top_model_plot_path = 'plots/vgg16_ft_top_model_plot.png'
     model_plot_path = 'plots/vgg16_ft_model_plot.png'
-    train_bottleneck_features_path = 'weights/vgg16_bottleneck_features_train.npy'
-    val_bottleneck_features_path = 'weights/vgg16_bottleneck_features_validation.npy'
-    top_model_weights_path = 'weights/vgg16_bottleneck_fc_model.h5'
-    # train_bottleneck_features_path = 'weights/vgg16_ft_bottleneck_features_train.npy'
-    # val_bottleneck_features_path = 'weights/vgg16_ft_bottleneck_features_validation.npy'
-    # top_model_weights_path = 'weights/vgg16_ft_bottleneck_fc_model.h5'
+    train_bottleneck_features_path = 'weights/vgg16_ft_bottleneck_features_train.npy'
+    val_bottleneck_features_path = 'weights/vgg16_ft_bottleneck_features_validation.npy'
+    top_model_weights_path = 'weights/vgg16_ft_bottleneck_fc_model.h5'
     model_weights_path = 'weights/vgg16_ft_weights.h5'
+    model_path = 'weights/vgg16_ft_model.h5'
     history_path = 'histories/vgg16_ft_history'
 
     defaults = {
@@ -75,9 +73,9 @@ class MyVgg16FT:
         util.save_model_plot(self.top_model_plot_path, model)
 
         model.fit(train_data, train_labels,
-                            epochs=epochs,
-                            batch_size=batch_size,
-                            validation_data=(val_data, val_labels))
+                  epochs=epochs,
+                  batch_size=batch_size,
+                  validation_data=(val_data, val_labels))
         model.save_weights(self.top_model_weights_path)
         util.eval_model_loss_acc(model, val_data, val_labels, batch_size)
 
@@ -113,20 +111,22 @@ class MyVgg16FT:
                                       validation_data=val_generator,
                                       validation_steps=val_generator.samples / batch_size)
         model.save_weights(self.model_weights_path)
+        model.save(self.model_path)
         util.save_history(self.history_path, history)
 
     def evaluate(self, data_dir, batch_size=defaults['batch_size']):
-        test_generator = util.get_generator(data_dir, self.img_width, self.img_height, batch_size)
+        test_generator = util.get_categorical_generator(data_dir, self.img_width, self.img_height, batch_size)
 
-        model = self.get_trained_model(test_generator.num_classes)
-        test_loss, test_acc = model.evaluate_generator(test_generator)
+        model = self.get_trained_model()
+        test_loss, test_acc = model.evaluate_generator(test_generator,
+                                                       steps=(len(test_generator.filenames) // batch_size))
 
         print('Test accuracy: ', test_acc)
         print('Test loss: ', test_loss)
 
-    def make_prediction(self, path, num_classes):
+    def make_prediction(self, path):
         image = util.load_image(path, self.img_width, self.img_height)
-        model = self.get_trained_model(num_classes)
+        model = self.get_trained_model()
         return model.predict_classes(image)
 
     def get_history(self):
@@ -134,11 +134,20 @@ class MyVgg16FT:
 
     def get_confusion_matrix(self, directory, batch_size=defaults['batch_size']):
         generator = util.get_generator(directory, self.img_width, self.img_height, batch_size)
-        model = self.get_trained_model(generator.num_classes)
+        model = self.get_trained_model()
         true_labels = generator.classes
         predictions = model.predict_generator(generator)
         pred_labels = np.argmax(predictions, axis=-1)
         return confusion_matrix(true_labels, pred_labels)
+
+    def get_wrong_predictions(self, directory, batch_size=defaults['batch_size']):
+        generator = util.get_generator(directory, self.img_width, self.img_height, batch_size)
+        true_labels = generator.classes
+        model = self.get_trained_model()
+        predictions = model.predict_generator(generator)
+        pred_labels = np.argmax(predictions, axis=-1)
+        # TODO create list wrong predictions here
+        return np.nonzero(pred_labels != true_labels)
 
     @staticmethod
     def get_top_model(input_shape, num_classes):
@@ -152,22 +161,5 @@ class MyVgg16FT:
     def get_base_model(self):
         return VGG16(include_top=False, weights='imagenet', input_shape=(self.img_width, self.img_height, 3))
 
-    def get_trained_model(self, num_classes):
-        base_model = self.get_base_model()
-        base_model.trainable = True
-        set_trainable = False
-        for layer in base_model.layers:
-            if layer.name == 'block5_conv1':
-                set_trainable = True
-            if set_trainable:
-                layer.trainable = True
-            else:
-                layer.trainable = False
-        top_model = self.get_top_model(base_model.output_shape[1:], num_classes)
-        model = Sequential()
-        model.add(base_model)
-        model.add(top_model)
-        model.compile(optimizer=SGD(lr=1e-4, momentum=0.9), loss='categorical_crossentropy', metrics=['accuracy'])
-        model.summary()
-        util.load_model_weights(self.model_weights_path, model)
-        return model
+    def get_trained_model(self):
+        return load_model('../' + self.model_path)
