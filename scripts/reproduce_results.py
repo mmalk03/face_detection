@@ -236,22 +236,16 @@ def show_incorrect_predictions(network, data_dir):
             images.append(os.path.join(root, filename))
 
     class_dictionary = util.get_class_dictionary(data_dir)
-    inc = network.get_wrong_predictions(data_dir)
-    incorrects = inc[0]
+    incorrects = network.get_wrong_predictions(data_dir)
 
     for i in range(4):
         random_image_index = randint(0, len(incorrects))
-        img_index = incorrects[random_image_index]
-        random_wrong_image = images[img_index]
-        predicted_class = network.make_prediction(random_wrong_image)
+        wrong_prediction = incorrects[random_image_index]
+        wrong_image_index = wrong_prediction[0]
+        true_label_index = wrong_prediction[1]
+        pred_label_index = wrong_prediction[2]
 
-        pred_label_index = predicted_class[0]
-        true_label_index = (img_index // 400)
-        # TODO fix this
-        print(class_dictionary.items())
-        for (k, v) in class_dictionary.items():
-            print(k, ' ', v)
-
+        random_wrong_image = images[wrong_image_index]
         pred_label = [k for (k, v) in class_dictionary.items() if v == pred_label_index]
         true_label = [k for (k, v) in class_dictionary.items() if v == true_label_index]
         print('Predicted: ', pred_label)

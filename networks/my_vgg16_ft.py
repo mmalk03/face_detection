@@ -146,8 +146,12 @@ class MyVgg16FT:
         model = self.get_trained_model()
         predictions = model.predict_generator(generator)
         pred_labels = np.argmax(predictions, axis=-1)
-        # TODO create list wrong predictions here
-        return np.nonzero(pred_labels != true_labels)
+
+        wrong_pred = []
+        for true_label, pred_label, index in zip(true_labels, pred_labels, range(0, len(true_labels))):
+            if true_label != pred_label:
+                wrong_pred.append((index, true_label, pred_label))
+        return wrong_pred
 
     @staticmethod
     def get_top_model(input_shape, num_classes):
