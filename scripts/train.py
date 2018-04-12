@@ -3,7 +3,7 @@ import argparse
 
 import matplotlib
 
-from rappers.scripts import util
+from scripts import util
 
 matplotlib.use('agg')
 

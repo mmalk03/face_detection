@@ -4,7 +4,7 @@ from keras.models import Sequential, load_model
 from keras.utils.np_utils import to_categorical
 from sklearn.metrics import confusion_matrix
 
-from rappers.networks import util
+from networks import util
 
 
 class MyInceptionV3:

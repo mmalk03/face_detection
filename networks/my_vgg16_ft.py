@@ -6,7 +6,7 @@ from keras.optimizers import SGD
 from keras.utils.np_utils import to_categorical
 from sklearn.metrics import confusion_matrix
 
-from rappers.networks import util
+from networks import util
 
 
 class MyVgg16FT:

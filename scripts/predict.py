@@ -4,7 +4,7 @@ import argparse
 import cv2
 import matplotlib
 
-from rappers.scripts import util
+from scripts import util
 
 matplotlib.use('agg')
 

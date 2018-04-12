@@ -11,9 +11,9 @@ import numpy as np
 from keras.preprocessing.image import load_img, img_to_array
 from random import randint
 
-from rappers.networks.my_vgg16 import MyVgg16
-from rappers.networks.my_vgg16_ft import MyVgg16FT
-from rappers.scripts import util
+from networks.my_vgg16 import MyVgg16
+from networks.my_vgg16_ft import MyVgg16FT
+from scripts import util
 
 matplotlib.use('agg')
 

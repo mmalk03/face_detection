@@ -1,13 +1,13 @@
 import pickle
 from keras.preprocessing.image import ImageDataGenerator
 
-from rappers.networks.my_inceptionv3 import MyInceptionV3
-from rappers.networks.my_resnet50 import MyResNet50
-from rappers.networks.my_resnet50_ft import MyResNet50FT
-from rappers.networks.my_vgg16 import MyVgg16
-from rappers.networks.my_vgg16_2 import MyVgg162
-from rappers.networks.my_vgg16_data_aug import MyVgg16DA
-from rappers.networks.my_vgg16_ft import MyVgg16FT
+from networks.my_inceptionv3 import MyInceptionV3
+from networks.my_resnet50 import MyResNet50
+from networks.my_resnet50_ft import MyResNet50FT
+from networks.my_vgg16 import MyVgg16
+from networks.my_vgg16_2 import MyVgg162
+from networks.my_vgg16_data_aug import MyVgg16DA
+from networks.my_vgg16_ft import MyVgg16FT
 
 
 def get_class_dictionary(directory):

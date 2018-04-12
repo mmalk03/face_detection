@@ -3,12 +3,12 @@ import argparse
 
 import matplotlib
 
-from rappers.scripts import util
+from scripts import util
 
 matplotlib.use('agg')
 
 defaults = {
-    'base_model': 'inceptionv3',
+    'base_model': 'vgg16_ft',
     'data_dir': '../data/validation'
 }
 
