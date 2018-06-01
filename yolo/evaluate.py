@@ -6,9 +6,9 @@ import os
 
 from keras.models import load_model
 
-from yolo.ann_parser import parse_csv_annotation
-from yolo.generator import BatchGenerator
-from yolo.utils.utils import normalize, evaluate
+from ann_parser import parse_csv_annotation
+from generator import BatchGenerator
+from utils.utils import normalize, evaluate
 
 
 def _main_(args):
@@ -19,12 +19,11 @@ def _main_(args):
 
     ###############################
     #   Create the validation generator
-    ###############################  
+    ###############################
     valid_ints, labels = parse_csv_annotation(
         config['valid']['valid_annot_file'],
         config['valid']['valid_image_folder'],
-        config['valid']['cache_name'],
-        config['model']['labels']
+        config['valid']['cache_name']
     )
 
     labels = labels.keys() if len(config['model']['labels']) == 0 else config['model']['labels']

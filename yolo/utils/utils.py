@@ -4,7 +4,7 @@ import cv2
 import numpy as np
 from scipy.special import expit
 
-from .bbox import BoundBox, bbox_iou
+from utils.bbox import BoundBox, bbox_iou
 
 
 def _sigmoid(x):
@@ -69,7 +69,6 @@ def evaluate(model, generator, iou_threshold=0.5, obj_thresh=0.5, nms_thresh=0.4
 
     # compute mAP by comparing all detections and all annotations
     average_precisions = {}
-
     for label in range(generator.num_classes()):
         false_positives = np.zeros((0,))
         true_positives = np.zeros((0,))

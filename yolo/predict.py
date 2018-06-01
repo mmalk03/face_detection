@@ -9,8 +9,8 @@ import numpy as np
 from keras.models import load_model
 from tqdm import tqdm
 
-from yolo.utils.bbox import draw_boxes
-from yolo.utils.utils import get_yolo_boxes, makedirs
+from utils.bbox import draw_boxes
+from utils.utils import get_yolo_boxes, makedirs
 
 
 def _main_(args):
@@ -25,7 +25,7 @@ def _main_(args):
 
     ###############################
     #   Set some parameter
-    ###############################       
+    ###############################
     net_h, net_w = 416, 416  # a multiple of 32, the smaller the faster
     obj_thresh, nms_thresh = 0.5, 0.45
 

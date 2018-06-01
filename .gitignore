@@ -16,3 +16,4 @@ ostr.png
 rap_train.zip
 __pycache__/
 .idea/
+yolo/weights/

@@ -6,9 +6,8 @@ from keras.models import Model
 
 
 class YoloLayer(Layer):
-    def __init__(self, anchors, max_grid, batch_size, warmup_batches, ignore_thresh,
-                 grid_scale, obj_scale, noobj_scale, xywh_scale, class_scale,
-                 **kwargs):
+    def __init__(self, anchors, max_grid, batch_size, warmup_batches, ignore_thresh, grid_scale,
+                 obj_scale, noobj_scale, xywh_scale, class_scale, **kwargs):
         # make the model settings persistent
         self.ignore_thresh = ignore_thresh
         self.warmup_batches = warmup_batches
@@ -171,11 +170,9 @@ class YoloLayer(Layer):
         wh_delta = xywh_mask * (pred_box_wh - true_box_wh) * wh_scale * self.xywh_scale
         conf_delta = object_mask * (pred_box_conf - true_box_conf) * self.obj_scale + (
                 1 - object_mask) * conf_delta * self.noobj_scale
-        class_delta = object_mask * \
-                      tf.expand_dims(
-                          tf.nn.sparse_softmax_cross_entropy_with_logits(labels=true_box_class, logits=pred_box_class),
-                          4) * \
-                      self.class_scale
+        class_delta = object_mask * tf.expand_dims(
+            tf.nn.sparse_softmax_cross_entropy_with_logits(labels=true_box_class, logits=pred_box_class), 4) \
+                      * self.class_scale
 
         loss_xy = tf.reduce_sum(tf.square(xy_delta), list(range(1, 5)))
         loss_wh = tf.reduce_sum(tf.square(wh_delta), list(range(1, 5)))
@@ -226,20 +223,8 @@ def _conv_block(inp, convs, do_skip=True):
     return add([skip_connection, x]) if do_skip else x
 
 
-def create_yolov3_model(
-        nb_class,
-        anchors,
-        max_box_per_image,
-        max_grid,
-        batch_size,
-        warmup_batches,
-        ignore_thresh,
-        grid_scales,
-        obj_scale,
-        noobj_scale,
-        xywh_scale,
-        class_scale
-):
+def create_yolov3_model(nb_class, anchors, max_box_per_image, max_grid, batch_size, warmup_batches, ignore_thresh,
+                        grid_scales, obj_scale, noobj_scale, xywh_scale, class_scale):
     input_image = Input(shape=(None, None, 3))  # net_h, net_w, 3
     true_boxes = Input(shape=(1, 1, 1, max_box_per_image, 4))
     true_yolo_1 = Input(

@@ -47,7 +47,7 @@
     "xywh_scale": 1,
     "class_scale": 1,
     "tensorboard_dir": "log_face",
-    "saved_weights_name": "/home/qwark/virtualenvironment/tensorflow/keras-yolo3/face.h5",
+    "saved_weights_name": "/home/qwark/virtualenvironment/tensorflow/rappers/yolo/face.h5",
     "debug": false
   },
   "valid": {

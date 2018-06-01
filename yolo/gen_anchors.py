@@ -4,7 +4,7 @@ import random
 
 import numpy as np
 
-from yolo.ann_parser import parse_csv_annotation
+from ann_parser import parse_csv_annotation
 
 
 def IOU(ann, centroids):
@@ -100,8 +100,7 @@ def _main_(argv):
     train_imgs, train_labels = parse_csv_annotation(
         config['train']['train_annot_file'],
         config['train']['train_image_folder'],
-        config['train']['cache_name'],
-        config['model']['labels']
+        config['train']['cache_name']
     )
 
     # run k_mean to find the anchors

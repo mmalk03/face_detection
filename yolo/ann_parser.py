@@ -5,7 +5,7 @@ import pickle
 from PIL import Image
 
 
-def parse_csv_annotation(ann_file_path, img_dir, cache_name, labels=[]):
+def parse_csv_annotation(ann_file_path, img_dir, cache_name):
     class_label = 'face'
     if os.path.exists(cache_name):
         with open(cache_name, 'rb') as handle:

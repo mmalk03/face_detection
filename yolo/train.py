@@ -8,21 +8,21 @@ import numpy as np
 from keras.callbacks import EarlyStopping, ReduceLROnPlateau
 from keras.optimizers import Adam
 
-from yolo.ann_parser import parse_csv_annotation
-from yolo.callbacks import CustomModelCheckpoint, CustomTensorBoard
-from yolo.generator import BatchGenerator
-from yolo.utils.utils import normalize, evaluate, makedirs
-from yolo.yolo import create_yolov3_model, dummy_loss
+from ann_parser import parse_csv_annotation
+from callbacks import CustomModelCheckpoint, CustomTensorBoard
+from generator import BatchGenerator
+from utils.utils import normalize, evaluate, makedirs
+from yolo import create_yolov3_model, dummy_loss
 
 
 def create_training_instances(train_annot_file, train_image_folder, train_cache,
-                              valid_annot_file, valid_image_folder, valid_cache, labels):
+                              valid_annot_file, valid_image_folder, valid_cache):
     # parse annotations of the training set
-    train_ints, train_labels = parse_csv_annotation(train_annot_file, train_image_folder, train_cache, labels)
+    train_ints, train_labels = parse_csv_annotation(train_annot_file, train_image_folder, train_cache)
 
     # parse annotations of the validation set, if any, otherwise split the training set
     if os.path.exists(valid_annot_file):
-        valid_ints, valid_labels = parse_csv_annotation(valid_annot_file, valid_image_folder, valid_cache, labels)
+        valid_ints, valid_labels = parse_csv_annotation(valid_annot_file, valid_image_folder, valid_cache)
     else:
         print("valid_annot_folder not exists. Spliting the trainining set.")
 
@@ -34,21 +34,8 @@ def create_training_instances(train_annot_file, train_image_folder, train_cache,
         valid_ints = train_ints[train_valid_split:]
         train_ints = train_ints[:train_valid_split]
 
-    # compare the seen labels with the given labels in config.json
-    if len(labels) > 0:
-        overlap_labels = set(labels).intersection(set(train_labels.keys()))
-
-        print('Seen labels: \t' + str(train_labels) + '\n')
-        print('Given labels: \t' + str(labels))
-
-        # return None, None, None if some given label is not in the dataset
-        if len(overlap_labels) < len(labels):
-            print('Some labels have no annotations! Please revise the list of labels in the config.json.')
-            return None, None, None
-    else:
-        print('No labels are provided. Train on all seen labels.')
-        print(train_labels)
-        labels = train_labels.keys()
+    print('Training on labels: \t' + str(train_labels) + '\n')
+    labels = train_labels.keys()
 
     max_box_per_image = max([len(inst['object']) for inst in (train_ints + valid_ints)])
 
@@ -139,14 +126,13 @@ def _main_(args):
         config['train']['cache_name'],
         config['valid']['valid_annot_file'],
         config['valid']['valid_image_folder'],
-        config['valid']['cache_name'],
-        config['model']['labels']
+        config['valid']['cache_name']
     )
     print('\nTraining on: \t' + str(labels) + '\n')
 
     ###############################
     #   Create the generators 
-    ###############################    
+    ###############################
     train_generator = BatchGenerator(
         instances=train_ints,
         anchors=config['model']['anchors'],
@@ -218,7 +204,7 @@ def _main_(args):
 
     ###############################
     #   Run the evaluation
-    ###############################   
+    ###############################
     # compute mAP for all the classes
     average_precisions = evaluate(infer_model, valid_generator)
 
