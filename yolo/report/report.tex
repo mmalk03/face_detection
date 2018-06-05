@@ -64,6 +64,28 @@
 
     \section{Hyperparameters}\label{sec:hyperparameters}
 
+    Figure~\ref{fig:compare1} presents comparison between two configurations described in the Figure~\ref{fig:configurations1}.
+    \begin{figure}[!h]
+        \centering
+        \begin{tabular}{cccc}
+            \textbf{Configuration} & \textbf{Min input size} & \textbf{Max input size} & \textbf{Batch size} \\
+            1 & 128 & 288 & 4 \\
+            2 & 288 & 448 & 2
+        \end{tabular}
+        \caption{Details of configurations}
+        \label{fig:configurations1}
+    \end{figure}
+
+    \begin{figure}[!h]
+        \centering
+        \begin{tabular}{cc}
+            \subfloat[Loss]{\includegraphics[width = 0.5\textwidth]{plots/compare_loss_face_01_06_15-25-face_05_06_15-08.png}} &
+            \subfloat[Mean Average Precision at 0.5]{\includegraphics[width = 0.5\textwidth]{plots/compare_map_face_01_06_15-25-face_05_06_15-08.png}} \\
+        \end{tabular}
+        \caption{Comparison of two configurations}
+        \label{fig:compare1}
+    \end{figure}
+
     \subsection{Batch size}\label{subsec:batchSize}
     Batch size is one of the hyperparameters which can influence the network accuracy.
     During experiments, two batch sizes were analysed: 16 and 32.
