@@ -2,6 +2,7 @@ import warnings
 
 import tensorflow as tf
 from keras.callbacks import TensorBoard, ModelCheckpoint
+from utils.utils import evaluate
 
 
 class CustomTensorBoard(TensorBoard):
@@ -33,14 +34,26 @@ class CustomModelCheckpoint(ModelCheckpoint):
     """ to save the template model, not the multi-GPU model
     """
 
-    def __init__(self, model_to_save, **kwargs):
+    mAP_path = ''
+    infer_model = None
+    val_generator = None
+
+    def __init__(self, model_to_save, mAP_path, infer_model, val_generator, **kwargs):
         super(CustomModelCheckpoint, self).__init__(**kwargs)
         self.model_to_save = model_to_save
+        self.mAP_path = mAP_path
+        self.infer_model = infer_model
+        self.val_generator = val_generator
 
     def on_epoch_end(self, epoch, logs=None):
         logs = logs or {}
         self.epochs_since_last_save += 1
         if self.epochs_since_last_save >= self.period:
+
+            average_precisions = evaluate(self.infer_model, self.val_generator)
+            with open(self.mAP_path, "a") as myfile:
+                myfile.write(str(average_precisions[0]) + '\n')
+
             self.epochs_since_last_save = 0
             filepath = self.filepath.format(epoch=epoch + 1, **logs)
             if self.save_best_only:

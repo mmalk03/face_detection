@@ -12,7 +12,8 @@ from utils.utils import normalize, evaluate
 
 
 def _main_(args):
-    config_path = args.conf
+    # config_path = args.conf
+    config_path = 'config_faces_eval.json'
 
     with open(config_path) as config_buffer:
         config = json.loads(config_buffer.read())

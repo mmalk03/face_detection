@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-
+import pickle
 import argparse
 import json
 import os
@@ -42,7 +42,7 @@ def create_training_instances(train_annot_file, train_image_folder, train_cache,
     return train_ints, valid_ints, sorted(labels), max_box_per_image
 
 
-def create_callbacks(saved_weights_name, tensorboard_logs, model_to_save):
+def create_callbacks(saved_weights_name, tensorboard_logs, model_to_save, mAP_path, infer_model, val_generator):
     makedirs(tensorboard_logs)
 
     early_stop = EarlyStopping(
@@ -54,6 +54,9 @@ def create_callbacks(saved_weights_name, tensorboard_logs, model_to_save):
     )
     checkpoint = CustomModelCheckpoint(
         model_to_save=model_to_save,
+        mAP_path=mAP_path,
+        infer_model=infer_model,
+        val_generator=val_generator,
         filepath=saved_weights_name,  # + '{epoch:02d}.h5',
         monitor='loss',
         verbose=1,
@@ -190,9 +193,10 @@ def _main_(args):
     ###############################
     #   Kick off the training
     ###############################
-    callbacks = create_callbacks(config['train']['saved_weights_name'], config['train']['tensorboard_dir'], infer_model)
+    callbacks = create_callbacks(config['train']['saved_weights_name'], config['train']['tensorboard_dir'], infer_model,
+                                 config['train']['mAP_path'], infer_model, valid_generator)
 
-    train_model.fit_generator(
+    history = train_model.fit_generator(
         generator=train_generator,
         steps_per_epoch=len(train_generator) * config['train']['train_times'],
         epochs=config['train']['nb_epochs'] + config['train']['warmup_epochs'],
@@ -212,6 +216,13 @@ def _main_(args):
     for label, average_precision in average_precisions.items():
         print(labels[label] + ': {:.4f}'.format(average_precision))
     print('mAP: {:.4f}'.format(sum(average_precisions.values()) / len(average_precisions)))
+
+    save_history(config['train']['saved_history_name'], history.history)
+
+
+def save_history(path, history):
+    with open(path, 'wb') as file_pi:
+        pickle.dump(history, file_pi)
 
 
 if __name__ == '__main__':
