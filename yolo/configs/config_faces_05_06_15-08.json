@@ -1,0 +1,61 @@
+{
+  "model": {
+    "min_input_size": 128,
+    "max_input_size": 288,
+    "anchors": [
+      32,
+      41,
+      38,
+      62,
+      50,
+      88,
+      67,
+      123,
+      73,
+      64,
+      94,
+      164,
+      119,
+      107,
+      145,
+      211,
+      223,
+      301
+    ],
+    "labels": [
+      "face"
+    ]
+  },
+  "train": {
+    "train_image_folder": "/home/qwark/datasets/raw_dataset/",
+    "train_annot_file": "/home/qwark/datasets/raw_dataset/faces.csv",
+    "cache_name": "face_train.pkl",
+    "train_times": 2,
+    "batch_size": 4,
+    "learning_rate": 1e-4,
+    "nb_epochs": 30,
+    "warmup_epochs": 3,
+    "ignore_thresh": 0.5,
+    "gpus": "0,1",
+    "grid_scales": [
+      1,
+      1,
+      1
+    ],
+    "obj_scale": 5,
+    "noobj_scale": 1,
+    "xywh_scale": 1,
+    "class_scale": 1,
+    "tensorboard_dir": "log_face",
+    "saved_weights_name": "/home/qwark/virtualenvironment/tensorflow/rappers/yolo/weights/face_05_06_15-08.h5",
+    "saved_history_name": "/home/qwark/virtualenvironment/tensorflow/rappers/yolo/histories/face_05_06_15-08",
+    "mAP_path": "/home/qwark/virtualenvironment/tensorflow/rappers/yolo/histories/face_05_06_15-08_mAP.txt",
+    "debug": false
+  },
+  "valid": {
+    "valid_image_folder": "",
+    "valid_annot_file": "",
+    "cache_name": "",
+    "valid_times": 1
+  }
+}
