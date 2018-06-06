@@ -147,4 +147,4 @@ class MyResNet50FT:
         return ResNet50(include_top=False, weights='imagenet', input_shape=(self.img_width, self.img_height, 3))
 
     def get_trained_model(self):
-        return load_model('../' + self.model_path)
+        return load_model(self.model_path)

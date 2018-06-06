@@ -2,7 +2,7 @@ import warnings
 
 import tensorflow as tf
 from keras.callbacks import TensorBoard, ModelCheckpoint
-from utils.utils import evaluate
+from yolo.utils.utils import evaluate
 
 
 class CustomTensorBoard(TensorBoard):

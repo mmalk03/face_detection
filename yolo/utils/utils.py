@@ -4,7 +4,7 @@ import cv2
 import numpy as np
 from scipy.special import expit
 
-from utils.bbox import BoundBox, bbox_iou
+from yolo.utils.bbox import BoundBox, bbox_iou
 
 
 def _sigmoid(x):

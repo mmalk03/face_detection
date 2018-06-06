@@ -37,9 +37,9 @@
 
     \maketitle
 
-    \section{Description of the assignment}\label{sec:descriptionOfTheAssignment}
+    \section{Introduction}\label{sec:introduction}
 
-    The goal of this task was to design, implement and train YOLO object detection system for detecting faces of Polish rappers.
+    The goal of this task was to design, implement and train YOLO object detection system (YOLOv3 was chosen) for detecting faces of Polish rappers.
     Then, the extracted face should be piped to previously trained model in order to classify it.
 
     The original dataset defined around 700 hundred bounding boxes for faces.
@@ -48,23 +48,25 @@
 
     The models are resizing the images before processing, so data of arbitrary size can be used.
     However, it is important to note that images have to be in the same format (\textit{jpg} used in this case).
-    Therefore, part of the preprocessing involves converting images from \textit{png} format to \textit{jpg}.
+    Therefore, part of the pre-processing involves converting images from \textit{png} format to \textit{jpg}.
     Lack of this conversion caused unbearable accuracy - close to 0\%.
 
-    The project conists of following scripts:
+    The project consists of following scripts:
     \begin{itemize}
-        \item $evaluate$ - evaluates model accuracy and loss on specified dataset,
-        \item $predict$ - predicts a class of specified image,
-        \item $reproduce\_results$ - creates plots shown in the report,
-        \item $train$ - trains given model on specified dataset.
+        \item \textit{detect\_classify} - detects faces in image and predicts their classes,
+        \item \textit{evaluate} - evaluates model accuracy (Mean Average Precision at 0.5) and loss using specified configuration file,
+        \item \textit{reproduce\_results} - creates plots shown in the report,
+        \item \textit{train} - trains detection system using specified configuration file.
     \end{itemize}
+
+    \newpage
 
     \section{Analysis of results}\label{sec:analysisOfResults}
 
+    Figure~\ref{fig:compare1} presents comparison of results using two configurations, which differences are described in the Figure~\ref{fig:configurations1}.
+    Min and max input size define the range to vary the size of the image during training (should be a multiple of 32).
+    It can be observed that although bigger input sizes resulted in faster mAP improvement, the final mAP@0.5 after 24 epochs rounded to 2 digits after the comma, was the same - $91\%$.
 
-    \section{Hyperparameters}\label{sec:hyperparameters}
-
-    Figure~\ref{fig:compare1} presents comparison between two configurations described in the Figure~\ref{fig:configurations1}.
     \begin{figure}[!h]
         \centering
         \begin{tabular}{cccc}
@@ -85,17 +87,5 @@
         \caption{Comparison of two configurations}
         \label{fig:compare1}
     \end{figure}
-
-    \subsection{Batch size}\label{subsec:batchSize}
-    Batch size is one of the hyperparameters which can influence the network accuracy.
-    During experiments, two batch sizes were analysed: 16 and 32.
-    Unfortunately, starting from 64, the batch of images was too big to fit it into GPU memory.
-    In the Figure~\ref{fig:vgg16_bs_compare} the influence of mentioned batch sizes are shown.
-    It can be noticed, that larger batch size gave slightly better results, but the difference isn't huge.
-
-    \newpage
-    \section{Analysis of predictions}\label{sec:analysisOfPredictions}
-    In the Figure~\ref{fig:wrong_predictions} some of wrong predictions of fine-tuned version of VGG16 are shown. Finally, Figure \ref{fig:confusion_matrix} presents the confusion matrix of mentioned network.
-
 
 \end{document}

@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 
-from utils.colors import get_color
+from yolo.utils.colors import get_color
 
 
 class BoundBox:

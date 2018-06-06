@@ -87,7 +87,7 @@ class MyResNet50:
         test_labels = test_generator.classes
         test_labels = to_categorical(test_labels, num_classes=num_classes)
 
-        top_model = load_model('../' + self.model_path)
+        top_model = load_model(self.model_path)
         test_loss, test_acc = top_model.evaluate(test_bottleneck_features, test_labels, batch_size=batch_size)
 
         print('Test accuracy: ', test_acc)
@@ -98,7 +98,7 @@ class MyResNet50:
 
         base_model = self.get_base_model()
         bottleneck_prediction = base_model.predict(image)
-        top_model = load_model('../' + self.model_path)
+        top_model = load_model(self.model_path)
         return top_model.predict_classes(bottleneck_prediction)
 
     def get_history(self):
@@ -108,7 +108,7 @@ class MyResNet50:
         validation_data = util.load_bottleneck_features(self.val_bottleneck_features_path)
         val_generator = util.get_generator(directory, self.img_width, self.img_height, batch_size)
         train_labels = val_generator.classes
-        top_model = load_model('../' + self.model_path)
+        top_model = load_model(self.model_path)
         predicted_labels = top_model.predict_classes(validation_data)
         return confusion_matrix(train_labels, predicted_labels)
 
