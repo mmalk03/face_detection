@@ -19,3 +19,4 @@ do
 done
 echo 'Creating labels.csv'
 sed -r 's/(\w+)\/([^,]*),(.*)/\1-\2,face,\3/' <raw_dataset/faces.csv >labels.csv
+#TODO: create python script for preprocessing

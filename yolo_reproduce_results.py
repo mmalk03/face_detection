@@ -4,8 +4,6 @@ import pickle
 import matplotlib.pyplot as plt
 import numpy as np
 
-# matplotlib.use('agg')
-
 plot_save_dir = 'report/plots/'
 history_dir = 'histories/'
 
@@ -13,9 +11,10 @@ history_dir = 'histories/'
 def main():
     hist1_name = 'face_01_06_15-25'
     hist2_name = 'face_05_06_15-08'
-    # TODO: add even smaller input size and batch size = 8 or 16
+    hist3_name = 'face_06_06_20-24'
     process_history(hist1_name)
     process_history(hist2_name)
+    process_history(hist3_name)
     compare_2_histories(hist1_name, hist2_name, '288 - 488, bs=2', '128 - 288, bs=4')
 
 

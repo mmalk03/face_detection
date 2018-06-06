@@ -104,7 +104,7 @@ def create_model(nb_class, anchors, max_box_per_image, max_grid, batch_size, war
         print("\nLoading pretrained weights.\n")
         template_model.load_weights(saved_weights_name)
     else:
-        template_model.load_weights("backend.h5", by_name=True)
+        template_model.load_weights("yolo/backend.h5", by_name=True)
 
     train_model = template_model
 

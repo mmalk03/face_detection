@@ -123,9 +123,8 @@ if __name__ == '__main__':
                                                     'VGG16')
     argparser.add_argument('-c', '--conf', help='path to configuration file',
                            default='yolo/configs/config_faces_01_06_15-25.json')
-    argparser.add_argument('-i', '--input', help='path to an image or a directory of images',
-                           default='/home/qwark/datasets/raw_dataset/kękę/58.jpg')
-    argparser.add_argument('-o', '--output', help='path to output directory', default='yolo/report/plots')
+    argparser.add_argument('-i', '--input', help='path to an image or a directory of images')
+    argparser.add_argument('-o', '--output', help='path to output directory', default='yolo/report/images/')
 
     args = argparser.parse_args()
     _main_(args)
