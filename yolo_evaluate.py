@@ -12,18 +12,22 @@ from yolo.utils.utils import normalize, evaluate
 
 
 def _main_(args):
-    # config_path = args.conf
-    config_path = 'config_faces_eval.json'
+    config_path = 'yolo/configs/config_faces_eval.json'
 
     with open(config_path) as config_buffer:
         config = json.loads(config_buffer.read())
+
+    if args.data_dir[-1] != '/':
+        args.data_dir += '/'
+    valid_image_folder = args.data_dir
+    valid_annot_file = args.data_dir + 'faces.csv'
 
     ###############################
     #   Create the validation generator
     ###############################
     valid_ints, labels = parse_csv_annotation(
-        config['valid']['valid_annot_file'],
-        config['valid']['valid_image_folder'],
+        valid_annot_file,
+        valid_image_folder,
         config['valid']['cache_name']
     )
 
@@ -62,7 +66,7 @@ def _main_(args):
 
 if __name__ == '__main__':
     argparser = argparse.ArgumentParser(description='Evaluate YOLO_v3 model on any dataset')
-    argparser.add_argument('-c', '--conf', help='path to configuration file')
+    argparser.add_argument('-d', '--data-dir', help='path to dataset')
 
     args = argparser.parse_args()
     _main_(args)

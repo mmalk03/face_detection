@@ -47,12 +47,10 @@
     "xywh_scale": 1,
     "class_scale": 1,
     "tensorboard_dir": "log_face",
-    "saved_weights_name": "/home/qwark/virtualenvironment/tensorflow/rappers/yolo/face.h5",
+    "saved_weights_name": "yolo/weights/face_01_06_15-25.h5",
     "debug": false
   },
   "valid": {
-    "valid_image_folder": "/home/qwark/datasets/raw_dataset/",
-    "valid_annot_file": "/home/qwark/datasets/raw_dataset/faces.csv",
     "cache_name": "face_valid.pkl",
     "valid_times": 1
   }

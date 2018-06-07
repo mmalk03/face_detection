@@ -47,14 +47,12 @@
     The dataset was split automatically into two parts by Keras, using 80\% of the data for training and remaining 20\% for validation.
 
     The models are resizing the images before processing, so data of arbitrary size can be used.
-    However, it is important to note that images have to be in the same format (\textit{jpg} used in this case).
-    Therefore, part of the pre-processing involves converting images from \textit{png} format to \textit{jpg}.
-    Lack of this conversion caused unbearable accuracy - close to 0\%.
+    The final mean average precision at 0.5, evaluated on the whole dataset (containing images used for training), is \textbf{97.26\%}.
 
     The project consists of following python scripts:
     \begin{itemize}
         \item \textit{yolo\_detect\_classify} - detects faces in image and predicts their classes,
-        \item \textit{yolo\_evaluate} - evaluates model accuracy (Mean Average Precision at 0.5) and loss using specified configuration file,
+        \item \textit{yolo\_evaluate} - evaluates model accuracy (Mean Average Precision at 0.5) using specified data directory with the same structure as provided dataset,
         \item \textit{yolo\_reproduce\_results} - creates plots shown in the report,
         \item \textit{yolo\_train} - trains detection system using specified configuration file.
     \end{itemize}
@@ -65,6 +63,7 @@
     Min and max input size define the range to vary the size of the image during training (should be a multiple of 32).
     Figure~\ref{fig:compare1} presents comparison of results using first and second configurations.
     It can be observed that although bigger input sizes resulted in faster mAP improvement, the final mAP@0.5 after 24 epochs rounded to 2 digits after the comma, was the same - $91\%$.
+    Obviously, mentioned mean average precisions are evaluated purely on the validation set, which contains only data not used during training.
     However, Figure~\ref{fig:badResults} shows that the input size can't be too small.
     Unfortunately, the chosen model requires a substantial amount of graphics card memory (nearly 4GB were available), so larger batch sizes couldn't be tested.
     Finally, in the Figure~\ref{fig:bestConfig} the whole training process of the best performing configuration is presented.
